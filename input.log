@@ -1,0 +1,24 @@
+2026-02-06T10:22:01Z INFO  request_id=8b6c2 user=elias path=/health status=200 msg="ok"
+
+2026-02-06T10:22:05Z INFO  request_id=8b6c3 method=GET url="/api/v1/me?api_key=abc123XYZ&limit=50" status=200
+2026-02-06T10:22:06Z INFO  request_id=8b6c4 method=GET url="/api/v1/me?token=tok_live_7f3a1b9cD0E2&limit=10" status=200
+2026-02-06T10:22:07Z WARN  request_id=8b6c5 method=POST url="/login?username=bob&password=SuperSecretPass123&remember=true" status=401
+
+2026-02-06T10:22:10Z INFO  request_id=8b6c6 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.TESTPAYLOAD.SIGNATURE user=bob
+2026-02-06T10:22:11Z INFO  request_id=8b6c7 Authorization: Bearer shorttoken status=200
+2026-02-06T10:22:12Z INFO  request_id=8b6c8 Authorization: Basic dXNlcjpwYXNz status=200   # should NOT redact with current rules
+
+2026-02-06T10:22:15Z INFO  request_id=8b6c9 X-Api-Key: sk_test_51K9kP0mZp7Yk3r2mP user=svc-payments
+2026-02-06T10:22:16Z INFO  request_id=8b6d0 X-API-Key: 9f86d081884c7d659a2feaa0c55ad015 user=svc-jobs
+2026-02-06T10:22:17Z INFO  request_id=8b6d1 Api-Key: legacyKey_000000000000000000 user=svc-legacy
+
+2026-02-06T10:22:20Z INFO  request_id=8b6d2 body={"token":"jwt_ABC.DEF.GHI","user":"alice","role":"admin"} status=200
+2026-02-06T10:22:21Z INFO  request_id=8b6d3 body={"password":"palesunrunner6","user":"elias"} status=200
+2026-02-06T10:22:22Z INFO  request_id=8b6d4 body={"secret":"shh_its_a_secret","note":"do not share"} status=200
+2026-02-06T10:22:23Z INFO  request_id=8b6d5 body={"api_key":"jsonKey-AAA-BBB-CCC","ok":true} status=200
+
+2026-02-06T10:22:30Z INFO  request_id=8b6d6 msg="token=not_redacted_here_because_it_is_in_quotes token=tok_2"  # first token= will be redacted (no stop quote)
+2026-02-06T10:22:31Z INFO  request_id=8b6d7 msg="api_key=embedded-in-text;still-should-stop-at-space" status=200
+
+2026-02-06T10:22:40Z INFO  request_id=8b6d8 nonsecret="api_key" note="this line should stay mostly unchanged"
+2026-02-06T10:22:41Z INFO  request_id=8b6d9 user=bob tokenization=disabled status=200
