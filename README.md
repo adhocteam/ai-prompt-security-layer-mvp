@@ -1,2 +1,10 @@
-# ai-prompt-security-layer-mvp
-MVP for showing how nice it is to not worry about PII when using AI.
+## Build
+
+### Linux (g++)
+```bash
+g++ -O3 -std=c++20 -march=native redact.cpp -o redact
+```
+### Mac (clang++)
+```bash
+clang++ -O3 -std=c++20 redact.cpp -o redact
+```
