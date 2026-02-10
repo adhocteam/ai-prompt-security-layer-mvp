@@ -1,6 +1,6 @@
 # AI Prompt Security Layer MVP
 
-A client-side redaction tool that strips sensitive data — API keys, tokens, passwords — from text before it's sent to an LLM. All processing happens in the browser via WebAssembly, so secrets never leave your machine.
+Client-side redaction logic that strips sensitive data — API keys, tokens, passwords — from text before it's sent to an LLM. All processing happens in the browser via WebAssembly, so secrets never leave your machine.
 
 Paste text containing credentials into the input pane, configure marker-based redaction rules (Bearer headers, query params, JSON fields, etc.), and the tool replaces matched values with `[REDACTED]` instantly.
 
