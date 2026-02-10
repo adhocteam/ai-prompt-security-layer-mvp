@@ -17,4 +17,4 @@ Clone the repo to your machine.
 cd ai-prompt-security-layer-mvp
 python3 -m http.server 8000 -d public
 ```
-Then visit [localhost](http://localhost:8000/).
+Then visit [localhost](http://localhost:8000/)
