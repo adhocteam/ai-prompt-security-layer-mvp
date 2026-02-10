@@ -1,3 +1,11 @@
 redact
 *.o
 build/
+
+# build outputs (emscripten)
+public/*.wasm
+public/*.mjs
+
+# logs / outputs
+*.log
+redacted.log
