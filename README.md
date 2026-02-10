@@ -1,13 +1,12 @@
 ## Build
+Install em++
+```
+em++ redact.cpp -O3 -I./vendor \
+  -sWASM=1 -sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=web \
+  -sALLOW_MEMORY_GROWTH=1 --bind \
+  -o public/redactor.mjs
+```
 
-### Linux (g++)
-```bash
-g++ -O3 -std=c++20 -march=native redact.cpp -o redact
-```
-### Mac (clang++)
-```bash
-clang++ -O3 -std=c++20 redact.cpp -o redact
-```
 ## Frontend
 [Lemonade.js](https://lemonadejs.com/)
 
