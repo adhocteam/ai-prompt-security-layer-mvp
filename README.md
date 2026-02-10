@@ -43,4 +43,4 @@ Then visit [http://localhost:8000](http://localhost:8000/).
 
 ## Frontend
 
-Built with [Lemonade.js](https://lemonadejs.com/) — a lightweight reactive UI library with no build step.
+Built with [Lemonade.js](https://lemonadejs.com/) — a lightweight reactive UI library with no build step or dependencies.
