@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Redactor</title>
+    <script src="https://cdn.jsdelivr.net/npm/lemonadejs@5/dist/lemonade.min.js"></script>
+    <style>
+      body { margin:0; font-family: system-ui, sans-serif; }
+      .wrap { display:flex; height:100vh; }
+      .pane { padding:12px; overflow:auto; }
+      .left { width:420px; border-right:1px solid #ddd; }
+      .right { flex:1; display:flex; flex-direction:column; gap:10px; }
+      textarea { width:100%; box-sizing:border-box; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .row { display:flex; gap:8px; align-items:center; }
+      .rule { border:1px solid #ddd; border-radius:10px; padding:10px; margin:10px 0; }
+      .btn { padding:8px 10px; border:1px solid #ccc; border-radius:10px; background:#fff; cursor:pointer; }
+      .muted { color:#666; font-size:12px; }
+      select, input { width:100%; box-sizing:border-box; padding:8px; border:1px solid #ddd; border-radius:10px; }
+      .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
