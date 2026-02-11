@@ -25,6 +25,72 @@ api_key=SUPERSECRET&x=1
   this.showAdvanced = false;
   this.rulesJson = "";
 
+  const PRESET_RULES = {
+    springboot: [
+      { type: "bearer_header", header: "Authorization", key: "", marker: "", mode: "whitespace", stop_char: "", stop_set: "", max_len: 0 },
+
+      { type: "header", header: "X-Api-Key", key: "", marker: "", mode: "whitespace", stop_char: "", stop_set: "", max_len: 0 },
+      { type: "header", header: "X-API-Key", key: "", marker: "", mode: "whitespace", stop_char: "", stop_set: "", max_len: 0 },
+      { type: "header", header: "Api-Key", key: "", marker: "", mode: "whitespace", stop_char: "", stop_set: "", max_len: 0 },
+
+      { type: "query_param", header: "", key: "access_token", marker: "", mode: "set", stop_char: "", stop_set: "& \t\r\n", max_len: 0 },
+      { type: "query_param", header: "", key: "refresh_token", marker: "", mode: "set", stop_char: "", stop_set: "& \t\r\n", max_len: 0 },
+      { type: "query_param", header: "", key: "id_token", marker: "", mode: "set", stop_char: "", stop_set: "& \t\r\n", max_len: 0 },
+      { type: "query_param", header: "", key: "token", marker: "", mode: "set", stop_char: "", stop_set: "& \t\r\n", max_len: 0 },
+      { type: "query_param", header: "", key: "api_key", marker: "", mode: "set", stop_char: "", stop_set: "& \t\r\n", max_len: 0 },
+      { type: "query_param", header: "", key: "apikey", marker: "", mode: "set", stop_char: "", stop_set: "& \t\r\n", max_len: 0 },
+      { type: "query_param", header: "", key: "client_secret", marker: "", mode: "set", stop_char: "", stop_set: "& \t\r\n", max_len: 0 },
+
+      { type: "json_field", header: "", key: "token", marker: "", mode: "char", stop_char: "\"", stop_set: "", max_len: 0 },
+      { type: "json_field", header: "", key: "access_token", marker: "", mode: "char", stop_char: "\"", stop_set: "", max_len: 0 },
+      { type: "json_field", header: "", key: "refresh_token", marker: "", mode: "char", stop_char: "\"", stop_set: "", max_len: 0 },
+      { type: "json_field", header: "", key: "id_token", marker: "", mode: "char", stop_char: "\"", stop_set: "", max_len: 0 },
+      { type: "json_field", header: "", key: "password", marker: "", mode: "char", stop_char: "\"", stop_set: "", max_len: 0 },
+      { type: "json_field", header: "", key: "secret", marker: "", mode: "char", stop_char: "\"", stop_set: "", max_len: 0 },
+      { type: "json_field", header: "", key: "api_key", marker: "", mode: "char", stop_char: "\"", stop_set: "", max_len: 0 },
+
+      { type: "custom", header: "", key: "", marker: "spring.datasource.password=", mode: "whitespace", stop_char: "", stop_set: "", max_len: 0 },
+      { type: "custom", header: "", key: "", marker: "spring.redis.password=", mode: "whitespace", stop_char: "", stop_set: "", max_len: 0 },
+      { type: "custom", header: "", key: "", marker: "spring.mail.password=", mode: "whitespace", stop_char: "", stop_set: "", max_len: 0 },
+      { type: "custom", header: "", key: "", marker: "management.endpoint.env.keys-to-sanitize=", mode: "whitespace", stop_char: "", stop_set: "", max_len: 0 },
+    ],
+  };
+
+  this.ruleKey = (r) => {
+    const type = (r.type || "").trim();
+    const header = (r.header || "").trim();
+    const key = (r.key || "").trim();
+    const marker = (r.marker || "").trim();
+    const mode = (r.mode || "").trim();
+    const stop_char = (r.stop_char || "").trim();
+    const stop_set = (r.stop_set || "").trim();
+    const max_len = String(Number(r.max_len) || 0);
+    return [type, header, key, marker, mode, stop_char, stop_set, max_len].join("|");
+  };
+
+  this.dedupeRules = () => {
+    const seen = new Set();
+    const out = [];
+    for (const r of this.rules) {
+      const k = this.ruleKey(r);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(r);
+    }
+    this.rules = out;
+  };
+
+  this.applyPreset = (presetId) => {
+    const toAdd = PRESET_RULES[presetId] || [];
+    if (!toAdd.length) return;
+
+    for (const r of toAdd) this.rules.push({ ...r });
+    this.dedupeRules();
+    this.refresh("rules");
+    this.markDirty();
+    this.setStatus(`Preset applied: ${presetId}`);
+  };
+
   this.setStatus = (s) => {
     this.status = s;
     this.refresh("status");
@@ -199,6 +265,16 @@ api_key=SUPERSECRET&x=1
           </div>
         </div>
 
+        <div style="margin-top:10px;">
+          <div style="color:#666;font-size:12px;margin-bottom:6px;">Presets</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <button onclick="${() => this.applyPreset("springboot")}"
+              style="padding:7px 10px;border:1px solid #ccc;border-radius:999px;background:#fff;cursor:pointer;">
+              Spring Boot
+            </button>
+          </div>
+        </div>
+
         <div :loop="${this.rules}">
           <div style="border:1px solid #ddd;border-radius:12px;padding:10px;margin-top:10px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -208,7 +284,7 @@ api_key=SUPERSECRET&x=1
 
             <div style="margin-top:8px;">
               <div style="color:#666;font-size:12px;">Type</div>
-              <select style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;"
+              <select :bind="self.type" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;"
                 onchange="${this.onTypeChange}">
                 <option value="bearer_header">Bearer header</option>
                 <option value="header">Header value</option>
