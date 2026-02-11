@@ -16,6 +16,43 @@ function App() {
     { type: "json_field", header: "", key: "token", marker: "", mode: "char", stop_char: "\"", stop_set: "", max_len: 0 },
   ];
 
+  // ---- gradient helpers + per-rule shading ----
+  this.mix = (a, b, t) => Math.round(a + (b - a) * t);
+
+  this.paintRuleBoxes = () => {
+    // Run after Lemonade updates the DOM
+    setTimeout(() => {
+      const root = document.querySelector("#ruleList");
+      if (!root) return;
+      const els = root.querySelectorAll(".rule");
+      for (let i = 0; i < els.length; i++) {
+        const bg = (this.rules[i] && this.rules[i]._bg) ? this.rules[i]._bg : "#fff";
+        els[i].style.backgroundColor = bg;
+      }
+    }, 0);
+  };
+
+  this.updateRuleShades = () => {
+    const n = this.rules.length;
+
+    // More obvious light gray -> white
+    const start = { r: 232, g: 232, b: 232 };
+    const end = { r: 255, g: 255, b: 255 };
+
+    for (let i = 0; i < n; i++) {
+      const t = n <= 1 ? 0 : i / (n - 1);
+      const r = this.mix(start.r, end.r, t);
+      const g = this.mix(start.g, end.g, t);
+      const b = this.mix(start.b, end.b, t);
+      this.rules[i]._bg = `rgb(${r}, ${g}, ${b})`;
+    }
+
+    this.paintRuleBoxes();
+  };
+
+  // initial shade
+  this.updateRuleShades();
+
   this.input = `Authorization: Bearer abcdef123456
 X-Api-Key: SUPERSECRET
 api_key=SUPERSECRET&x=1
@@ -78,6 +115,7 @@ api_key=SUPERSECRET&x=1
       out.push(r);
     }
     this.rules = out;
+    this.updateRuleShades();
   };
 
   this.applyPreset = (presetId) => {
@@ -191,6 +229,7 @@ api_key=SUPERSECRET&x=1
       stop_set: "& \t\r\n",
       max_len: 0,
     });
+    this.updateRuleShades();
     this.refresh("rules");
     this.markDirty();
   };
@@ -198,6 +237,7 @@ api_key=SUPERSECRET&x=1
   this.removeRule = (e, item) => {
     const idx = this.rules.indexOf(item);
     if (idx >= 0) this.rules.splice(idx, 1);
+    this.updateRuleShades();
     this.refresh("rules");
     this.markDirty();
   };
@@ -245,6 +285,9 @@ api_key=SUPERSECRET&x=1
       this.setStatus("OK");
       this.syncRulesJson();
       this.run();
+
+      // paint after first render
+      this.paintRuleBoxes();
     } catch (e) {
       console.error(e);
       this.setStatus(e?.message ? `Failed to load WASM: ${e.message}` : "Failed to load WASM");
@@ -252,139 +295,115 @@ api_key=SUPERSECRET&x=1
   });
 
   return (render) => render`
-    <div style="display:flex;height:100vh;font-family:system-ui,sans-serif;">
-      <div style="width:460px;border-right:1px solid #ddd;padding:12px;overflow:auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="wrap">
+      <div class="pane left">
+        <div class="row" style="justify-content:space-between;">
           <div>
             <div style="font-weight:700;">Rules</div>
-            <div style="color:#666;font-size:12px;">${this.status}</div>
+            <div class="muted">${this.status}</div>
           </div>
-          <div style="display:flex;gap:8px;">
-            <button onclick="${this.addRule}" style="padding:8px 10px;border:1px solid #ccc;border-radius:10px;background:#fff;cursor:pointer;">Add</button>
-            <button onclick="${this.run}" style="padding:8px 10px;border:1px solid #ccc;border-radius:10px;background:#fff;cursor:pointer;">Run</button>
+          <div class="row">
+            <button class="btn" onclick="${this.addRule}">Add</button>
+            <button class="btn" onclick="${this.run}">Run</button>
           </div>
         </div>
 
         <div style="margin-top:10px;">
-          <div style="color:#666;font-size:12px;margin-bottom:6px;">Presets</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            <button onclick="${() => this.applyPreset("springboot")}"
-              style="padding:7px 10px;border:1px solid #ccc;border-radius:999px;background:#fff;cursor:pointer;">
-              Spring Boot
-            </button>
+          <div class="muted" style="margin-bottom:6px;">Presets</div>
+          <div class="row" style="flex-wrap:wrap;">
+            <button class="btn" onclick="${() => this.applyPreset("springboot")}">Spring Boot</button>
           </div>
         </div>
 
-        <div :loop="${this.rules}">
-          <div style="border:1px solid #ddd;border-radius:12px;padding:10px;margin-top:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div style="color:#666;font-size:12px;">Rule</div>
-              <button onclick="${this.removeRule}" style="padding:6px 8px;border:1px solid #ccc;border-radius:10px;background:#fff;cursor:pointer;">Remove</button>
-            </div>
+        <div id="ruleList">
+          <div :loop="${this.rules}">
+            <div class="rule">
+              <div class="row" style="justify-content:space-between;">
+                <div class="muted">Rule</div>
+                <button class="btn" onclick="${this.removeRule}">Remove</button>
+              </div>
 
-            <div style="margin-top:8px;">
-              <div style="color:#666;font-size:12px;">Type</div>
-              <select :bind="self.type" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;"
-                onchange="${this.onTypeChange}">
-                <option value="bearer_header">Bearer header</option>
-                <option value="header">Header value</option>
-                <option value="query_param">Query param</option>
-                <option value="json_field">JSON field</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-
-            <div style="margin-top:8px;">
-              <div style="color:#666;font-size:12px;">header (used by Bearer header / Header value)</div>
-              <input :bind="self.header"
-                placeholder="Authorization or X-Api-Key"
-                oninput="${this.markDirty}"
-                style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;" />
-            </div>
-
-            <div style="margin-top:8px;">
-              <div style="color:#666;font-size:12px;">key (used by Query param / JSON field)</div>
-              <input :bind="self.key"
-                placeholder="api_key or token"
-                oninput="${this.markDirty}"
-                style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;" />
-            </div>
-
-            <div style="margin-top:8px;">
-              <div style="color:#666;font-size:12px;">marker (Custom only)</div>
-              <input :bind="self.marker"
-                placeholder='e.g. "secret":"'
-                oninput="${this.markDirty}"
-                style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;" />
-            </div>
-
-            <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <div>
-                <div style="color:#666;font-size:12px;">mode (Custom)</div>
-                <select :bind="self.mode" onchange="${this.markDirty}"
-                  style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;">
-                  <option value="whitespace">whitespace</option>
-                  <option value="char">char</option>
-                  <option value="set">set</option>
+              <div style="margin-top:8px;">
+                <div class="muted">Type</div>
+                <select :bind="self.type" onchange="${this.onTypeChange}">
+                  <option value="bearer_header">Bearer header</option>
+                  <option value="header">Header value</option>
+                  <option value="query_param">Query param</option>
+                  <option value="json_field">JSON field</option>
+                  <option value="custom">Custom</option>
                 </select>
               </div>
-              <div>
-                <div style="color:#666;font-size:12px;">max_len (0=none)</div>
-                <input :bind="self.max_len" oninput="${this.markDirty}"
-                  style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;" />
-              </div>
-            </div>
 
-            <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <div>
-                <div style="color:#666;font-size:12px;">stop_char (Custom + mode=char)</div>
-                <input :bind="self.stop_char" oninput="${this.markDirty}"
-                  placeholder='"'
-                  style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;" />
+              <div style="margin-top:8px;">
+                <div class="muted">header (used by Bearer header / Header value)</div>
+                <input :bind="self.header" placeholder="Authorization or X-Api-Key" oninput="${this.markDirty}" />
               </div>
-              <div>
-                <div style="color:#666;font-size:12px;">stop_set (Custom + mode=set)</div>
-                <input :bind="self.stop_set" oninput="${this.markDirty}"
-                  placeholder="& \t\r\n"
-                  style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ddd;border-radius:10px;" />
+
+              <div style="margin-top:8px;">
+                <div class="muted">key (used by Query param / JSON field)</div>
+                <input :bind="self.key" placeholder="api_key or token" oninput="${this.markDirty}" />
+              </div>
+
+              <div style="margin-top:8px;">
+                <div class="muted">marker (Custom only)</div>
+                <input :bind="self.marker" placeholder='e.g. "secret":"' oninput="${this.markDirty}" />
+              </div>
+
+              <div class="grid2" style="margin-top:8px;">
+                <div>
+                  <div class="muted">mode (Custom)</div>
+                  <select :bind="self.mode" onchange="${this.markDirty}">
+                    <option value="whitespace">whitespace</option>
+                    <option value="char">char</option>
+                    <option value="set">set</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="muted">max_len (0=none)</div>
+                  <input :bind="self.max_len" oninput="${this.markDirty}" />
+                </div>
+              </div>
+
+              <div class="grid2" style="margin-top:8px;">
+                <div>
+                  <div class="muted">stop_char (Custom + mode=char)</div>
+                  <input :bind="self.stop_char" oninput="${this.markDirty}" placeholder='"' />
+                </div>
+                <div>
+                  <div class="muted">stop_set (Custom + mode=set)</div>
+                  <input :bind="self.stop_set" oninput="${this.markDirty}" placeholder="& \t\r\n" />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div style="margin-top:12px;display:flex;gap:8px;">
-          <button onclick="${this.toggleAdvanced}" style="padding:8px 10px;border:1px solid #ccc;border-radius:10px;background:#fff;cursor:pointer;">
-            ${this.showAdvanced ? "Hide JSON" : "Show JSON"}
-          </button>
-          <button onclick="${this.copyRulesJson}" style="padding:8px 10px;border:1px solid #ccc;border-radius:10px;background:#fff;cursor:pointer;">
-            Copy JSON
-          </button>
+        <div class="row" style="margin-top:12px;">
+          <button class="btn" onclick="${this.toggleAdvanced}">${this.showAdvanced ? "Hide JSON" : "Show JSON"}</button>
+          <button class="btn" onclick="${this.copyRulesJson}">Copy JSON</button>
         </div>
 
         <div style="margin-top:10px;display:${this.showAdvanced ? "block" : "none"};">
-          <div style="color:#666;font-size:12px;">Generated rules JSON</div>
-          <textarea :bind="self.rulesJson" readonly
-            style="width:100%;box-sizing:border-box;margin-top:6px;height:240px;font-family:ui-monospace,Menlo,monospace;"></textarea>
+          <div class="muted">Generated rules JSON</div>
+          <textarea :bind="self.rulesJson" readonly style="margin-top:6px;height:240px;" class="mono"></textarea>
         </div>
       </div>
 
-      <div style="flex:1;padding:12px;display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="pane right">
+        <div class="row" style="justify-content:space-between;">
           <div style="font-weight:700;">Input → Output</div>
-          <button onclick="${this.run}" style="padding:8px 10px;border:1px solid #ccc;border-radius:10px;background:#fff;cursor:pointer;">Run</button>
+          <button class="btn" onclick="${this.run}">Run</button>
         </div>
 
         <div style="display:flex;gap:10px;flex:1;">
           <div style="flex:1;display:flex;flex-direction:column;">
-            <div style="color:#666;font-size:12px;">Input</div>
-            <textarea :bind="self.input" oninput="${this.markDirty}"
-              style="flex:1;width:100%;box-sizing:border-box;font-family:ui-monospace,Menlo,monospace;"></textarea>
+            <div class="muted">Input</div>
+            <textarea :bind="self.input" oninput="${this.markDirty}" style="flex:1;"></textarea>
           </div>
 
           <div style="flex:1;display:flex;flex-direction:column;">
-            <div style="color:#666;font-size:12px;">Output</div>
-            <textarea :bind="self.output" readonly
-              style="flex:1;width:100%;box-sizing:border-box;font-family:ui-monospace,Menlo,monospace;"></textarea>
+            <div class="muted">Output</div>
+            <textarea :bind="self.output" readonly style="flex:1;"></textarea>
           </div>
         </div>
       </div>
