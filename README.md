@@ -1,4 +1,4 @@
-# AI Prompt Security Layer MVP
+# AI Prompt Security Layer POC
 
 Client-side redaction logic that strips sensitive data — API keys, tokens, passwords — from text before it's sent to an LLM.
 
