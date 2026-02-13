@@ -1,8 +1,31 @@
 # AI Prompt Security Layer MVP
 
-Client-side redaction logic that strips sensitive data — API keys, tokens, passwords — from text before it's sent to an LLM. All processing happens in the browser via WebAssembly, so secrets never leave your machine. This redaction script doesn't use regex. Instead it utilizes a marker-based, stop-delimited substring replacement algorithm.
+Client-side redaction logic that strips sensitive data — API keys, tokens, passwords — from text before it's sent to an LLM.
 
 Paste text containing credentials into the input pane, configure marker-based redaction rules (Bearer headers, query params, JSON fields, etc.), and the tool replaces matched values with `[REDACTED]` instantly.
+
+## Features
+* Runs entirely in the browser (client-side); nothing gets sent to a server
+* Loads your C++ redaction engine compiled to WebAssembly (`redactor.wasm`) via `redactor.mjs`
+* Lets a user build a redaction ruleset in a left-side “Rules” panel
+* Supports rule types:
+
+  * Bearer auth header redaction (`Authorization: Bearer …`)
+  * Generic header value redaction (`Header-Name: …`)
+  * Query parameter redaction (`api_key=…` with stop characters like `&`/whitespace)
+  * JSON field redaction (`"token":"…"` stopped by the next quote)
+  * Custom marker + mode rules (whitespace/char/set + optional max_len)
+* Allows adding new rules and removing existing rules
+* Generates a JSON representation of the current ruleset (`{ "rules": [...] }`)
+* Optionally shows the generated rules JSON in an “Advanced” panel
+* Can copy the rules JSON to the clipboard
+* Provides an input text area where a user pastes logs/code to redact
+* Produces a redacted output text area showing the result
+* Clears the output whenever rules or input change, so the user doesn’t mistake stale output for current output
+* Runs redaction on demand via a “Run” button (and also does an initial run after the WASM loads)
+* Uses a simple marker-based algorithm: finds each marker, replaces the following value up to a stop condition with `[REDACTED]`
+* Shows basic status messages (loading/OK/edited/error) in the UI
+
 
 ## Prerequisites
 
